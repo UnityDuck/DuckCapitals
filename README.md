@@ -73,6 +73,4 @@ git push origin feature-name
 
 ---
 
-**Отзывы:** Если вам понравилась игра, оставьте отзыв и поделитесь с друзьями!
-
-![Logo](images/ReadMeIcon.png)
+![Logo](images/var1/1200x630.png)
