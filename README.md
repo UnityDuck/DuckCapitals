@@ -73,4 +73,4 @@ git push origin feature-name
 
 ---
 
-![Logo](images/var1/1200x630.png)
+![Logo](images/ReadMeLogo.jpg)
