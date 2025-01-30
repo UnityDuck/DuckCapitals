@@ -1,115 +1,88 @@
 import pygame
-import sys
+import random
+import math
+import requests
+from geopy.distance import geodesic
+from io import BytesIO
+import reverse_geocoder as rg
+
+print(rg.search((3.440078, 55.791049)))
 
 pygame.init()
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Duck Capitals")
+WIDTH, HEIGHT = 650, 450
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Игра: Угадай точку на карте")
 
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
-duck_image = pygame.image.load('duck.png')
-duck_image = pygame.transform.scale(duck_image, (50, 50))
+def get_map_image(zoom=3, width=WIDTH, height=HEIGHT):
+    map_url = f"https://static-maps.yandex.ru/1.x/?ll=28.774255,55.484551&size={width},{height}&z={zoom}&l=map"
+    response = requests.get(map_url)
+    image = pygame.image.load(BytesIO(response.content))
+    return image
+
+def generate_random_coordinates():
+    lat = random.uniform(35.0, 72.0)
+    lon = random.uniform(-25.0, 40.0)
+    # Проверяем, является ли координата сушей
+    while not is_land(lat, lon):
+        lat = random.uniform(35.0, 72.0)
+        lon = random.uniform(-25.0, 40.0)
+    return lat, lon
+
+def is_land(lat, lon):
+    # Проверяем с использованием OpenStreetMap Nominatim API, чтобы узнать, суша ли это
+    url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+    response = requests.get(url)
+    print(response.content)
+    data = response.json()
+    if 'address' in data:
+        # Если в адресе есть страна, это, вероятно, суша
+        return True
+    return False
+
+target_lat, target_lon = generate_random_coordinates()
 
 font = pygame.font.Font(None, 36)
-input_font = pygame.font.Font(None, 30)
 
-duck_x = 100
-duck_y = 100
-duck_speed = 5
-input_text = ''
-correct_answer = 'paris'
-question_text = "What is the capital of France?"
+def draw_text(text, color, x, y):
+    text_surface = font.render(text, True, color)
+    screen.blit(text_surface, (x, y))
 
-MIN_Y = 100
-MAX_Y = 200
-
-keyboard = [
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
-]
-
-key_width = 50
-key_height = 50
-key_margin = 10
-
-def draw_keyboard():
-    y_offset = SCREEN_HEIGHT - 3 * (key_height + key_margin) - 20
-    for row_idx, row in enumerate(keyboard):
-        x_offset = 50
-        for key_idx, key in enumerate(row):
-            pygame.draw.rect(screen, GREEN, (x_offset, y_offset, key_width, key_height))
-            text = font.render(key, True, BLACK)
-            screen.blit(text, (x_offset + 15, y_offset + 10))
-            x_offset += key_width + key_margin
-        y_offset += key_height + key_margin
-
-def draw_duck():
-    screen.blit(duck_image, (duck_x, duck_y))
-
-def draw_input_text():
-    text = input_font.render(input_text, True, BLACK)
-    screen.blit(text, (50, SCREEN_HEIGHT - 100))
-
-def check_key_pressed():
-    y_offset = SCREEN_HEIGHT - 3 * (key_height + key_margin) - 20
-    for row_idx, row in enumerate(keyboard):
-        x_offset = 50
-        for key_idx, key in enumerate(row):
-            if duck_x + 50 > x_offset and duck_x < x_offset + key_width and duck_y + 50 > y_offset and duck_y < y_offset + key_height:
-                return key
-            x_offset += key_width + key_margin
-        y_offset += key_height + key_margin
-    return None
+def calculate_distance(lat1, lon1, lat2, lon2):
+    coords_1 = (lat1, lon1)
+    coords_2 = (lat2, lon2)
+    return geodesic(coords_1, coords_2).kilometers
 
 running = True
 while running:
     screen.fill(WHITE)
 
-    question = font.render(question_text, True, BLACK)
-    screen.blit(question, (50, 50))
+    map_image = get_map_image()
 
-    draw_keyboard()
+    screen.blit(map_image, (0, 0))
 
-    draw_duck()
+    draw_text("Кликните на карту!", BLUE, 10, 10)
 
-    draw_input_text()
-
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_w] and duck_y > MIN_Y:
-        duck_y -= duck_speed
-    if keys[pygame.K_s] and duck_y < MAX_Y:
-        duck_y += duck_speed
-    if keys[pygame.K_a] and duck_x > 0:
-        duck_x -= duck_speed
-    if keys[pygame.K_d] and duck_x < SCREEN_WIDTH - 50:
-        duck_x += duck_speed
+    draw_text(f"Загадано: Широта: {target_lat:.2f}, Долгота: {target_lon:.2f}", GREEN, 10, 50)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
-                key_pressed = check_key_pressed()
-                if key_pressed:
-                    input_text += key_pressed.lower()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            clicked_lat = target_lat - (mouse_y / HEIGHT) * (target_lat - 41.0)
+            clicked_lon = target_lon - (mouse_x / WIDTH) * (target_lon - 25.0)
 
-                if input_text.lower() == correct_answer:
-                    print("Correct!")
-                    input_text = ''
-                else:
-                    print("Incorrect, try again!")
-                    input_text = ''
+            distance = calculate_distance(clicked_lat, clicked_lon, target_lat, target_lon)
+
+            draw_text(f"Расстояние до загаданной точки: {distance:.2f} км", RED, 10, 100)
 
     pygame.display.update()
 
 pygame.quit()
-sys.exit()
