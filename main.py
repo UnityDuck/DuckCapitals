@@ -1,5 +1,4 @@
 import math
-import pygame
 import random
 import requests
 from pygame.locals import *
@@ -10,19 +9,47 @@ from datetime import datetime
 
 
 def add_day_to_db():
-    # Подключение к базе данных
     conn = sqlite3.connect('time.sqlite')
     cursor = conn.cursor()
 
-    # Получаем текущую дату
     current_day = datetime.now().strftime('%Y-%m-%d')
 
-    # Добавляем запись в таблицу days
     cursor.execute("INSERT INTO days (day) VALUES (?)", (current_day,))
 
-    # Сохраняем изменения и закрываем соединение
     conn.commit()
     conn.close()
+
+
+def update_winstreak():
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    current_day = datetime.now().strftime('%Y-%m-%d')
+
+    cursor.execute("SELECT winstreak FROM days WHERE day = ?", (current_day,))
+    result = cursor.fetchone()
+
+    if result:
+        current_winstreak = result[0]
+        try:
+            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (int(current_winstreak) + 1, current_day))
+        except TypeError:
+            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (1, current_day))
+
+    conn.commit()
+    conn.close()
+
+
+def get_top_winstreaks():
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT day, winstreak FROM days WHERE winstreak > 0 ORDER BY winstreak DESC LIMIT 5")
+    top_winstreaks = cursor.fetchall()
+
+    conn.close()
+
+    return top_winstreaks
 
 
 pygame.init()
@@ -144,7 +171,44 @@ class Particle:
         return self.lifetime > 0
 
 
+global_winstreak = 0
+
+
+def add_global_winstreak_to_db():
+    # Подключение к базе данных
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    # Получаем текущую дату
+    current_day = datetime.now().strftime('%Y-%m-%d')
+
+    # Проверяем, существует ли запись с сегодняшней датой
+    cursor.execute("SELECT winstreak FROM days WHERE day = ?", (current_day,))
+    result = cursor.fetchone()
+
+    print(result)
+
+    if result:
+        # Если запись существует, обновляем винстрик
+        current_winstreak = result[0]
+        cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (current_winstreak + global_winstreak, current_day))
+    else:
+        # Если записи нет, создаём новую запись с винстриком, равным текущему значению
+        cursor.execute("INSERT INTO days (day, winstreak) VALUES (?, ?)", (current_day, global_winstreak))
+
+    conn.commit()
+    conn.close()
+
+
+
+def reset_global_winstreak():
+    global global_winstreak
+    global_winstreak = 0
+
+
 def game_loop():
+    global global_winstreak
+
     running = True
     clock = pygame.time.Clock()
 
@@ -166,7 +230,7 @@ def game_loop():
     mark_position = None
     map_rect = None
 
-    button_image = pygame.image.load('button.png')
+    button_image = pygame.image.load('images/button.png')
     button_image = pygame.transform.scale(button_image, (80, 80))
     button_rect = button_image.get_rect(bottomright=(WIDTH - 10, HEIGHT - 25))
 
@@ -175,7 +239,7 @@ def game_loop():
     start_time = None
 
     particles = []
-    star_image = pygame.image.load("star.png")
+    star_image = pygame.image.load("images/star.png")
 
     while running:
         screen.fill(WHITE)
@@ -206,6 +270,9 @@ def game_loop():
 
                             show_image_and_description = True
                             start_time = pygame.time.get_ticks()
+
+                            global_winstreak += 1
+                            update_winstreak()
                         break
                     elif not show_map:
                         map_image = get_map_image()
@@ -239,8 +306,7 @@ def game_loop():
                 screen.blit(description_text, (WIDTH // 2 - description_text.get_width() // 2, 50))
                 screen.blit(image, (WIDTH // 2 - image.get_width() // 2, HEIGHT // 2 - 150))
 
-        # Обновляем и рисуем частицы
-        particles = [p for p in particles if p.is_alive()]  # Оставляем только живые частицы
+        particles = [p for p in particles if p.is_alive()]
         for particle in particles:
             particle.update()
             particle.draw(screen)
@@ -270,10 +336,11 @@ def get_user_location_on_map(mark_position, map_rect, center_lat, center_lon):
 
 
 def main_menu():
+    global global_winstreak
+
     running = True
     clock = pygame.time.Clock()
 
-    # Добавляем текущий день в базу данных при запуске игры
     add_day_to_db()
 
     play_image = pygame.image.load("images/play.png")
@@ -295,6 +362,24 @@ def main_menu():
 
         screen.blit(play_image, play_button_rect)
         screen.blit(help_image, help_button_rect)
+
+        # Отображение топов
+        top_winstreaks = get_top_winstreaks()
+        top_text = small_font.render("Топ по винстрику:", True, (0, 0, 0))
+        screen.blit(top_text, (WIDTH - 200, 50))
+
+        for i, (day, winstreak) in enumerate(top_winstreaks):
+            if i == 0:
+                color = (255, 215, 0)
+            elif i == 1:
+                color = (192, 192, 192)
+            elif i == 2:
+                color = (205, 127, 50)
+            else:
+                color = (0, 0, 0)
+
+            top_entry_text = small_font.render(f"{i + 1}. {day} - {winstreak} побед", True, color)
+            screen.blit(top_entry_text, (WIDTH - 200, 80 + i * 30))
 
         readme_logo = pygame.image.load("images/ReadMeLogo.jpg")
         readme_logo = scale_image_proportionally(readme_logo, 60, 60)
@@ -364,21 +449,32 @@ def show_help():
 
 
 def show_secret_window():
-    # Определяем все элементы из первого файла (игровой код) в этой функции.
     SCREEN_WIDTH = 800
     SCREEN_HEIGHT = 600
 
-    bg = pygame.image.load('bg.jpg')
+    bg = pygame.image.load('images/bg.jpg')
 
     class Player(pygame.sprite.Sprite):
-        right = True
-
         def __init__(self):
             super().__init__()
-            self.image = pygame.image.load('idle.png')
+            self.frame = 0
+            self.images_right = [pygame.image.load(f'sprites/{i}.png') for i in
+                                 range(1, 17)]
+            self.images_left = [pygame.image.load(f'sprites/-{i}.png') for i in
+                                range(1, 17)]
+
+            self.images_right = [pygame.transform.scale(img, (int(img.get_width() * 1.8), int(img.get_height() * 1.8)))
+                                 for img in self.images_right]
+            self.images_left = [pygame.transform.scale(img, (int(img.get_width() * 1.8), int(img.get_height() * 1.8)))
+                                for img in self.images_left]
+
+            self.image = self.images_right[self.frame]
             self.rect = self.image.get_rect()
             self.change_x = 0
             self.change_y = 0
+            self.last_update = pygame.time.get_ticks()
+            self.walking = False
+            self.facing_right = True
 
         def update(self):
             self.calc_grav()
@@ -401,6 +497,38 @@ def show_secret_window():
             if self.rect.top >= self.level.respawn_y:
                 self.respawn()
 
+            if self.walking:
+                now = pygame.time.get_ticks()
+                if now - self.last_update > 100:
+                    self.last_update = now
+                    self.frame = (self.frame + 1) % len(self.images_right)
+                    if self.facing_right:
+                        self.image = self.images_right[self.frame]
+                    else:
+                        self.image = self.images_left[self.frame]
+
+            elif not self.walking:
+                if self.facing_right:
+                    self.image = self.images_right[0]
+                else:
+                    self.image = self.images_left[0]
+
+        def go_left(self):
+            if self.facing_right:
+                self.facing_right = False
+            self.change_x = -9
+            self.walking = True
+
+        def go_right(self):
+            if not self.facing_right:
+                self.facing_right = True
+            self.change_x = 9
+            self.walking = True
+
+        def stop(self):
+            self.change_x = 0
+            self.walking = False
+
         def calc_grav(self):
             if self.change_y == 0:
                 self.change_y = 1
@@ -417,24 +545,6 @@ def show_secret_window():
             if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
                 self.change_y = -16
 
-        def go_left(self):
-            self.change_x = -9
-            if self.right:
-                self.flip()
-                self.right = False
-
-        def go_right(self):
-            self.change_x = 9
-            if not self.right:
-                self.flip()
-                self.right = True
-
-        def stop(self):
-            self.change_x = 0
-
-        def flip(self):
-            self.image = pygame.transform.flip(self.image, True, False)
-
         def respawn(self):
             lowest_platform = None
             for platform in self.level.platform_list:
@@ -449,7 +559,7 @@ def show_secret_window():
     class Platform(pygame.sprite.Sprite):
         def __init__(self, width, height, x, y):
             super().__init__()
-            self.image = pygame.image.load('platform.png')
+            self.image = pygame.image.load('images/platform.png')
             self.rect = self.image.get_rect()
             self.rect.width = width
             self.rect.height = height
@@ -461,7 +571,7 @@ def show_secret_window():
     class Particle(pygame.sprite.Sprite):
         def __init__(self, x, y):
             super().__init__()
-            self.image = pygame.image.load('star.png')
+            self.image = pygame.image.load('images/star.png')
             self.rect = self.image.get_rect()
             self.rect.x = x
             self.rect.y = y
@@ -472,6 +582,13 @@ def show_secret_window():
         def update(self):
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
+
+            if self.rect.left <= 0 or self.rect.right >= SCREEN_WIDTH:
+                self.speed_x = -self.speed_x
+
+            if self.rect.top <= 0 or self.rect.bottom >= SCREEN_HEIGHT:
+                self.speed_y = -self.speed_y
+
             self.life -= 1
             if self.life <= 0:
                 self.kill()
@@ -514,29 +631,33 @@ def show_secret_window():
             player.rect.y -= offset_y
             screen.blit(player.image, player.rect)
 
+    def load_level_from_file(filename):
+        level_data = []
+        try:
+            with open(filename, 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        level_data.append(list(map(int, line.split())))
+        except FileNotFoundError:
+            print(f"Error: The file {filename} was not found.")
+        return level_data
+
     class Level_01(Level):
-        def __init__(self, player):
+        def __init__(self, player, filename="level.txt"):
             Level.__init__(self, player)
-            level = [
-                [200, 32, 300, 500],
-                [200, 32, 75, 425],
-                [200, 32, 500, 350],
-                [200, 32, 100, 275],
-                [150, 32, 550, 200],
-                [150, 32, 750, 75],
-                [150, 32, 500, -25],
-                [150, 32, 100, -75],
-                [150, 32, -50, -190]
-            ]
-            for platform in level:
-                block = Platform(platform[0], platform[1], platform[2], platform[3])
+
+            level_data = load_level_from_file(filename)
+
+            for platform in level_data:
+                width, height, x, y = platform
+                block = Platform(width, height, x, y)
                 block.player = self.player
                 self.platform_list.add(block)
 
-            self.flag = Flag(350, -250)  # Flag on the highest platform
+            self.flag = Flag(350, -250)
             self.platform_list.add(self.flag)
 
-            # Set player starting position
             for platform in self.platform_list:
                 if platform.rect.x == 300 and platform.rect.y == 500:
                     self.player.rect.x = platform.rect.centerx - self.player.rect.width // 2
@@ -587,9 +708,8 @@ def show_secret_window():
 
             current_level.draw(screen, player)
 
-            # Check flag collision
             if pygame.sprite.collide_rect(player, current_level.flag):
-                for _ in range(30):  # Particle generation
+                for _ in range(30):
                     particle = Particle(player.rect.centerx, player.rect.centery)
                     particles.add(particle)
                     active_sprite_list.add(particle)
