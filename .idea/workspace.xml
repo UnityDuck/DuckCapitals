@@ -5,60 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="baf583b0-38d7-4d61-a993-5f592b00c032" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Materials/level.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/dc0b8842426297.57cc7473a76da.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/exit_image.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/intro_image.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-10.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-11.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-12.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-13.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-14.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-15.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-16.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-17.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-18.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-4.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-5.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-6.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-7.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-8.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/-9.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/10.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/11.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/12.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/13.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/14.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/15.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/16.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/17.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/18.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/4.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/5.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/6.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/7.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/8.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sprites/9.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/DuckCapitals.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/DuckCapitals.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/images/bg.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/button.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/button.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/map.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idle.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/idle.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/level.txt" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/Materials/history.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/bg_duckgame.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/broken_heart_image.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/logo_start.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_KEY.py" beforeDir="false" afterPath="$PROJECT_DIR$/API_KEY.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/bg.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/images/bg_maingame.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/help.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/images/help.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/idle.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/play.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/play.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/images/prize.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notmain.py" beforeDir="false" afterPath="$PROJECT_DIR$/notmain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platform.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/platform.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/prize.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/prize.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/star.png" beforeDir="false" afterPath="$PROJECT_DIR$/images/star.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notmain.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/time.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/time.sqlite" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -69,10 +28,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 6
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="2sdNVumfW2RyCTp0UuaeHnQscH4" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -94,13 +53,15 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Суровов Александр\Documents\GitHub\DuckCapitals\images" />
+      <recent name="C:\Users\Суровов Александр\Documents\GitHub\DuckCapitals" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Суровов Александр\Documents\GitHub\DuckCapitals\images" />
       <recent name="C:\Users\Суровов Александр\Documents\GitHub\DuckCapitals\Materials" />
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="notmain" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="DuckCapitals" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -114,7 +75,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/notmain.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\Суровов Александр\Documents\GitHub\DuckCapitals\main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />

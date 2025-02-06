@@ -1,56 +1,12 @@
 import math
 import random
+import pygame
 import requests
 from pygame.locals import *
 from io import BytesIO
 from geopy.distance import geodesic
 import sqlite3
 from datetime import datetime
-
-
-def add_day_to_db():
-    conn = sqlite3.connect('time.sqlite')
-    cursor = conn.cursor()
-
-    current_day = datetime.now().strftime('%Y-%m-%d')
-
-    cursor.execute("INSERT INTO days (day) VALUES (?)", (current_day,))
-
-    conn.commit()
-    conn.close()
-
-
-def update_winstreak():
-    conn = sqlite3.connect('time.sqlite')
-    cursor = conn.cursor()
-
-    current_day = datetime.now().strftime('%Y-%m-%d')
-
-    cursor.execute("SELECT winstreak FROM days WHERE day = ?", (current_day,))
-    result = cursor.fetchone()
-
-    if result:
-        current_winstreak = result[0]
-        try:
-            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (int(current_winstreak) + 1, current_day))
-        except TypeError:
-            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (1, current_day))
-
-    conn.commit()
-    conn.close()
-
-
-def get_top_winstreaks():
-    conn = sqlite3.connect('time.sqlite')
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT day, winstreak FROM days WHERE winstreak > 0 ORDER BY winstreak DESC LIMIT 5")
-    top_winstreaks = cursor.fetchall()
-
-    conn.close()
-
-    return top_winstreaks
-
 
 pygame.init()
 
@@ -102,6 +58,58 @@ def read_api_key():
 
 
 YANDEX_API_KEY = read_api_key()
+
+global_winstreak = 0
+
+
+def add_day_to_db():
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    current_day = datetime.now().strftime('%Y-%m-%d')
+
+    cursor.execute("SELECT 1 FROM days WHERE day = ?", (current_day,))
+    existing_day = cursor.fetchone()
+
+    if existing_day:
+        cursor.execute("UPDATE days SET day = ? WHERE day = ?", (current_day, current_day))
+    else:
+        cursor.execute("INSERT INTO days (day) VALUES (?)", (current_day,))
+
+    conn.commit()
+    conn.close()
+
+
+def update_winstreak():
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    current_day = datetime.now().strftime('%Y-%m-%d')
+
+    cursor.execute("SELECT winstreak FROM days WHERE day = ?", (current_day,))
+    result = cursor.fetchone()
+
+    if result:
+        current_winstreak = result[0]
+        try:
+            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (int(current_winstreak) + 1, current_day))
+        except TypeError:
+            cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (1, current_day))
+
+    conn.commit()
+    conn.close()
+
+
+def get_top_winstreaks():
+    conn = sqlite3.connect('time.sqlite')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT day, winstreak FROM days WHERE winstreak > 0 ORDER BY winstreak DESC LIMIT 5")
+    top_winstreaks = cursor.fetchall()
+
+    conn.close()
+
+    return sorted(top_winstreaks, key=lambda x: int(x[1]))
 
 
 def get_coordinates(place):
@@ -171,34 +179,26 @@ class Particle:
         return self.lifetime > 0
 
 
-global_winstreak = 0
-
-
 def add_global_winstreak_to_db():
-    # Подключение к базе данных
     conn = sqlite3.connect('time.sqlite')
     cursor = conn.cursor()
 
-    # Получаем текущую дату
     current_day = datetime.now().strftime('%Y-%m-%d')
 
-    # Проверяем, существует ли запись с сегодняшней датой
     cursor.execute("SELECT winstreak FROM days WHERE day = ?", (current_day,))
     result = cursor.fetchone()
 
     print(result)
 
     if result:
-        # Если запись существует, обновляем винстрик
         current_winstreak = result[0]
-        cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?", (current_winstreak + global_winstreak, current_day))
+        cursor.execute("UPDATE days SET winstreak = ? WHERE day = ?",
+                       (current_winstreak + global_winstreak, current_day))
     else:
-        # Если записи нет, создаём новую запись с винстриком, равным текущему значению
         cursor.execute("INSERT INTO days (day, winstreak) VALUES (?, ?)", (current_day, global_winstreak))
 
     conn.commit()
     conn.close()
-
 
 
 def reset_global_winstreak():
@@ -206,11 +206,138 @@ def reset_global_winstreak():
     global_winstreak = 0
 
 
+def main_menu():
+    global global_winstreak
+
+    running = True
+    clock = pygame.time.Clock()
+
+    add_day_to_db()
+
+    bg_image = pygame.image.load("images/bg_start.jpg")
+    bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+
+    play_image = pygame.image.load("images/play.png")
+    help_image = pygame.image.load("images/help.jpg")
+
+    play_image = pygame.transform.scale(play_image, (185, 69))
+    help_image = pygame.transform.scale(help_image, (212, 90))
+
+    play_button_rect = play_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    help_button_rect = help_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 80))
+
+    click_count = 0
+
+    while running:
+        screen.fill(WHITE)
+
+        screen.blit(bg_image, (0, 0))
+
+        screen.blit(play_image, play_button_rect)
+        screen.blit(help_image, help_button_rect)
+
+        top_winstreaks = get_top_winstreaks()
+        top_text = small_font.render("Топ по победам:", True, (0, 0, 0))
+        screen.blit(top_text, (WIDTH - 200, 20))
+
+        top_winstreaks = sorted(top_winstreaks, key=lambda x: int(x[1]), reverse=True)
+
+        for i, (day, winstreak) in enumerate(top_winstreaks):
+            if i == 0:
+                color = (255, 200, 0)
+            elif i == 1:
+                color = (192, 192, 192)
+            elif i == 2:
+                color = (205, 127, 50)
+            else:
+                color = (0, 0, 0)
+
+            top_entry_text = small_font.render(f"{i + 1}. {day} - {winstreak} побед", True, color)
+            screen.blit(top_entry_text, (WIDTH - 200, 50 + i * 30))
+
+        readme_logo = pygame.image.load("images/logo_start.png")
+        readme_logo = scale_image_proportionally(readme_logo, 200, 200)
+        logo_rect = readme_logo.get_rect(bottomleft=(10, HEIGHT - 10))
+        screen.blit(readme_logo, logo_rect)
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+
+            if event.type == MOUSEBUTTONDOWN:
+                x, y = event.pos
+
+                if play_button_rect.collidepoint(x, y):
+                    game_loop()
+                elif help_button_rect.collidepoint(x, y):
+                    show_help()
+
+                if logo_rect.collidepoint(x, y):
+                    click_count += 1
+                    if click_count == 3:
+                        show_secret_window()
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+def show_help():
+    running = True
+    clock = pygame.time.Clock()
+
+    background_image = pygame.image.load("images/help_image.png")
+    background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+    back_image = pygame.image.load("images/back.png")
+    back_image = pygame.transform.scale(back_image, (170, 75))
+
+    back_button_rect = back_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+
+    random_help_text = random.choice([
+        "Угадайте местоположение достопримечательности по фото.",
+        "Найдите местоположение достопримечательности на карте по фото.",
+        "Угадайте местоположение достопримечательности на карте по фото. (Может здесь есть пасхалка? :/)"
+    ])
+
+    while running:
+        screen.fill(WHITE)
+
+        # Отображение фона
+        screen.blit(background_image, (0, 0))
+
+        # Заголовок помощи
+        help_title = large_font.render("HELP. Does it really need you?", True, (0, 0, 0))
+        screen.blit(help_title, (WIDTH // 2 - help_title.get_width() // 2, HEIGHT // 4))
+
+        # Текст помощи
+        help_text = small_font.render(random_help_text, True, (0, 0, 0))
+        screen.blit(help_text, (WIDTH // 2 - help_text.get_width() // 2, HEIGHT // 2 - 30))
+
+        # Кнопка назад
+        screen.blit(back_image, back_button_rect)
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+
+            if event.type == MOUSEBUTTONDOWN:
+                x, y = event.pos
+
+                if back_button_rect.collidepoint(x, y):
+                    running = False
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
 def game_loop():
     global global_winstreak
 
     running = True
     clock = pygame.time.Clock()
+
+    background_image = pygame.image.load('images/bg_maingame.jpg')
+    background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
     index = random.choice(range(len(images)))
     image_path = images[index]
@@ -240,9 +367,17 @@ def game_loop():
 
     particles = []
     star_image = pygame.image.load("images/star.png")
+    broken_heart_image = pygame.image.load("images/broken_heart_image.png")
+    broken_heart_image = pygame.transform.scale(broken_heart_image, (40, 40))
+
+    exit_image = pygame.image.load("images/exit_image.png")
+    exit_image = pygame.transform.scale(exit_image, (WIDTH, HEIGHT))
+    exit_image.set_alpha(30)
+    exit_rect = exit_image.get_rect(topleft=(-WIDTH, 0))
+    exit_time = pygame.time.get_ticks()
 
     while running:
-        screen.fill(WHITE)
+        screen.blit(background_image, (0, 0))
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -258,7 +393,9 @@ def game_loop():
                     elif show_map and mark_position:
                         user_lat, user_lon = get_user_location_on_map(mark_position, map_rect, center_lat, center_lon)
                         distance = calculate_distance(target_lat, target_lon, user_lat, user_lon)
-                        print(f"Расстояние до места: {distance:.2f} км.")
+
+                        with open("Materials/history.txt", "a") as file:
+                            file.write(f"{datetime.now()} - {distance:.2f}\n")
 
                         if distance < 200:
                             for _ in range(50):
@@ -273,6 +410,13 @@ def game_loop():
 
                             global_winstreak += 1
                             update_winstreak()
+                        else:
+                            for _ in range(50):
+                                angle = random.uniform(0, 2 * 3.14159)
+                                speed = random.uniform(2, 5)
+                                particle_x = random.randint(WIDTH // 4, 3 * WIDTH // 4)
+                                particle_y = random.randint(HEIGHT // 4, 3 * HEIGHT // 4)
+                                particles.append(Particle(particle_x, particle_y, speed, angle, broken_heart_image))
                         break
                     elif not show_map:
                         map_image = get_map_image()
@@ -301,8 +445,9 @@ def game_loop():
 
         if show_image_and_description:
             if pygame.time.get_ticks() - start_time > 1500:
-                description_text = font.render(f"{description} - {place}", True, (0, 0, 0))
+                description_text = font.render(f"{description} - {place}", True, (255, 255, 255))
                 screen.fill(WHITE)
+                screen.blit(background_image, (0, 0))
                 screen.blit(description_text, (WIDTH // 2 - description_text.get_width() // 2, 50))
                 screen.blit(image, (WIDTH // 2 - image.get_width() // 2, HEIGHT // 2 - 150))
 
@@ -312,6 +457,10 @@ def game_loop():
             particle.draw(screen)
 
         screen.blit(button_image, button_rect)
+
+        if pygame.time.get_ticks() - exit_time < 3000:
+            exit_rect.x += 10
+            screen.blit(exit_image, exit_rect)
 
         pygame.display.flip()
         clock.tick(60)
@@ -335,124 +484,12 @@ def get_user_location_on_map(mark_position, map_rect, center_lat, center_lon):
     return user_lat, user_lon
 
 
-def main_menu():
-    global global_winstreak
-
-    running = True
-    clock = pygame.time.Clock()
-
-    add_day_to_db()
-
-    play_image = pygame.image.load("images/play.png")
-    help_image = pygame.image.load("images/help.jpg")
-
-    play_image = pygame.transform.scale(play_image, (185, 69))
-    help_image = pygame.transform.scale(help_image, (164, 60))
-
-    play_button_rect = play_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-    help_button_rect = help_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 80))
-
-    click_count = 0
-
-    while running:
-        screen.fill(WHITE)
-
-        title_text = large_font.render("DuckCapitals", True, (0, 0, 0))
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 4))
-
-        screen.blit(play_image, play_button_rect)
-        screen.blit(help_image, help_button_rect)
-
-        # Отображение топов
-        top_winstreaks = get_top_winstreaks()
-        top_text = small_font.render("Топ по винстрику:", True, (0, 0, 0))
-        screen.blit(top_text, (WIDTH - 200, 50))
-
-        for i, (day, winstreak) in enumerate(top_winstreaks):
-            if i == 0:
-                color = (255, 215, 0)
-            elif i == 1:
-                color = (192, 192, 192)
-            elif i == 2:
-                color = (205, 127, 50)
-            else:
-                color = (0, 0, 0)
-
-            top_entry_text = small_font.render(f"{i + 1}. {day} - {winstreak} побед", True, color)
-            screen.blit(top_entry_text, (WIDTH - 200, 80 + i * 30))
-
-        readme_logo = pygame.image.load("images/ReadMeLogo.jpg")
-        readme_logo = scale_image_proportionally(readme_logo, 60, 60)
-        logo_rect = readme_logo.get_rect(bottomleft=(10, HEIGHT - 10))
-        screen.blit(readme_logo, logo_rect)
-
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-
-            if event.type == MOUSEBUTTONDOWN:
-                x, y = event.pos
-
-                if play_button_rect.collidepoint(x, y):
-                    game_loop()
-                elif help_button_rect.collidepoint(x, y):
-                    show_help()
-
-                if logo_rect.collidepoint(x, y):
-                    click_count += 1
-                    if click_count == 3:
-                        show_secret_window()
-
-        pygame.display.flip()
-        clock.tick(60)
-
-
-def show_help():
-    running = True
-    clock = pygame.time.Clock()
-
-    back_image = pygame.image.load("images/back.png")
-
-    back_image = pygame.transform.scale(back_image, (170, 75))
-
-    back_button_rect = back_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
-
-    random_help_text = random.choice([
-        "Используйте карту, чтобы найти местоположение.",
-        "Кликните на карту, чтобы пометить ваше местоположение.",
-        "Смотрите расстояние до цели, когда отметите местоположение."
-    ])
-
-    while running:
-        screen.fill(WHITE)
-
-        help_title = large_font.render("Помощь", True, (0, 0, 0))
-        screen.blit(help_title, (WIDTH // 2 - help_title.get_width() // 2, HEIGHT // 4))
-
-        help_text = small_font.render(random_help_text, True, (0, 0, 0))
-        screen.blit(help_text, (WIDTH // 2 - help_text.get_width() // 2, HEIGHT // 2))
-
-        screen.blit(back_image, back_button_rect)
-
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-
-            if event.type == MOUSEBUTTONDOWN:
-                x, y = event.pos
-
-                if back_button_rect.collidepoint(x, y):
-                    running = False
-
-        pygame.display.flip()
-        clock.tick(60)
-
-
 def show_secret_window():
     SCREEN_WIDTH = 800
     SCREEN_HEIGHT = 600
 
-    bg = pygame.image.load('images/bg.jpg')
+    bg = pygame.image.load('images/bg_duckgame.jpg')
+    bg = pygame.transform.scale(bg, (800, 600))
 
     class Player(pygame.sprite.Sprite):
         def __init__(self):
@@ -644,7 +681,7 @@ def show_secret_window():
         return level_data
 
     class Level_01(Level):
-        def __init__(self, player, filename="level.txt"):
+        def __init__(self, player, filename="Materials/level.txt"):
             Level.__init__(self, player)
 
             level_data = load_level_from_file(filename)
@@ -681,7 +718,48 @@ def show_secret_window():
         done = False
         clock = pygame.time.Clock()
 
+        intro_image = pygame.image.load('images/intro_image.jpg')
+        intro_rect = intro_image.get_rect()
+        intro_rect.height = SCREEN_HEIGHT
+        intro_rect.width = 0
+        start_time = pygame.time.get_ticks()
+
         while not done:
+            screen.fill((0, 0, 0))
+
+            current_time = pygame.time.get_ticks()
+            if current_time - start_time < 3000:
+                intro_rect.width = int(SCREEN_WIDTH * (current_time - start_time) / 3000)
+                scaled_image = pygame.transform.scale(intro_image, (intro_rect.width, SCREEN_HEIGHT))
+                screen.blit(scaled_image, (0, 0))
+
+            else:
+                scaled_image = pygame.transform.scale(intro_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                screen.blit(scaled_image, (0, 0))
+
+            if current_time - start_time > 3000:
+                active_sprite_list.update()
+                current_level.update()
+
+                if player.rect.right > SCREEN_WIDTH:
+                    player.rect.right = SCREEN_WIDTH
+                if player.rect.left < 0:
+                    player.rect.left = 0
+
+                current_level.draw(screen, player)
+
+                if pygame.sprite.collide_rect(player, current_level.flag):
+                    for _ in range(30):
+                        particle = Particle(player.rect.centerx, player.rect.centery)
+                        particles.add(particle)
+                        active_sprite_list.add(particle)
+
+                active_sprite_list.draw(screen)
+                particles.update()
+                particles.draw(screen)
+
+            pygame.display.flip()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = True
@@ -698,28 +776,7 @@ def show_secret_window():
                     if event.key == pygame.K_d and player.change_x > 0:
                         player.stop()
 
-            active_sprite_list.update()
-            current_level.update()
-
-            if player.rect.right > SCREEN_WIDTH:
-                player.rect.right = SCREEN_WIDTH
-            if player.rect.left < 0:
-                player.rect.left = 0
-
-            current_level.draw(screen, player)
-
-            if pygame.sprite.collide_rect(player, current_level.flag):
-                for _ in range(30):
-                    particle = Particle(player.rect.centerx, player.rect.centery)
-                    particles.add(particle)
-                    active_sprite_list.add(particle)
-
-            active_sprite_list.draw(screen)
-            particles.update()
-            particles.draw(screen)
-
             clock.tick(30)
-            pygame.display.flip()
 
         pygame.quit()
 
