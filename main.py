@@ -21,35 +21,11 @@ font = pygame.font.SysFont("Arial", 24)
 small_font = pygame.font.SysFont("Arial", 18)
 large_font = pygame.font.SysFont("Arial", 48)
 
-images = [
-    "Materials/EyfelTower.jpg", "Materials/NemoMuseum.jpeg",
-    "Materials/NationalPragaMuseum.jpeg", "Materials/PolishRevolutionMuseum.jpg",
-    "Materials/OxfordStreet.jpeg", "Materials/MuseumOfBearGuiness.jpg",
-    "Materials/ParlamentOfVena.jpeg", "Materials/NikolaTeslaMuseum.jpeg",
-    "Materials/MaydanNez.jpg", "Materials/SquareOfSpain.jpeg",
-    "Materials/25AprilBridge.jpeg", "Materials/Panteon.jpeg",
-    "Materials/SquareOfFreedom.jpeg", "Materials/SenatSquare.jpeg",
-    "Materials/NationalSwedenMuseum.jpeg", "Materials/MSU.jpeg"
-]
+with open('Materials/images.txt', 'r', encoding="UTF-8") as file:
+    images = [line.strip() for line in file.readlines()]
 
-image_descriptions = [
-    ("Эйфелева башня", "Париж, Франция"),
-    ("Музей Немо", "Амстердам, Нидерланды"),
-    ("Национальный музей", "Прага, Чехия"),
-    ("Музей Варшавского Восстания", "Варшава, Польша"),
-    ("Улица Оксфорд-стрит", "Лондон, Великобритания"),
-    ("Музей пива Гиннесс", "Дублин, Ирландия"),
-    ("Здание парламента", "Вена, Австрия"),
-    ("Музей Николы Теслы", "Белград, Сербия"),
-    ("Майдан Незалежности", "Киев, Украина"),
-    ("Площадь Испании", "Мадрид, Испания"),
-    ("Мост 25 апреля", "Лиссабон, Португалия"),
-    ("Пантеон", "Рим, Италия"),
-    ("Площадь Независимости", "Минск, Белоруссия"),
-    ("Сенатская Площадь", "Хельсинки, Финляндия"),
-    ("Национальный музей Швеции", "Стокгольм, Швеция"),
-    ("Воробьёвы горы и МГУ", "Москва, Россия")
-]
+with open('Materials/names.txt', 'r', encoding="UTF-8") as file:
+    image_descriptions = [eval(line.strip()) for line in file.readlines()]
 
 
 def read_api_key():
@@ -285,13 +261,13 @@ def show_help():
     running = True
     clock = pygame.time.Clock()
 
-    background_image = pygame.image.load("images/help_image.png")
+    background_image = pygame.image.load("images/help_image.jpg")
     background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
-    back_image = pygame.image.load("images/back.png")
-    back_image = pygame.transform.scale(back_image, (170, 75))
+    back_image = pygame.image.load("images/back.jpg")
+    back_image = pygame.transform.scale(back_image, (100, 100))
 
-    back_button_rect = back_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    back_button_rect = back_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 150))
 
     random_help_text = random.choice([
         "Угадайте местоположение достопримечательности по фото.",
@@ -302,18 +278,14 @@ def show_help():
     while running:
         screen.fill(WHITE)
 
-        # Отображение фона
         screen.blit(background_image, (0, 0))
 
-        # Заголовок помощи
         help_title = large_font.render("HELP. Does it really need you?", True, (0, 0, 0))
         screen.blit(help_title, (WIDTH // 2 - help_title.get_width() // 2, HEIGHT // 4))
 
-        # Текст помощи
         help_text = small_font.render(random_help_text, True, (0, 0, 0))
         screen.blit(help_text, (WIDTH // 2 - help_text.get_width() // 2, HEIGHT // 2 - 30))
 
-        # Кнопка назад
         screen.blit(back_image, back_button_rect)
 
         for event in pygame.event.get():
