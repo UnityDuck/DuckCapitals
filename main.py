@@ -12,7 +12,7 @@ pygame.init()
 
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Местоположение на карте")
+pygame.display.set_caption("DuckCapitals")
 
 WHITE = (255, 255, 255)
 MARK_COLOR = (255, 0, 0)
@@ -677,7 +677,7 @@ def show_secret_window():
         pygame.init()
         size = [SCREEN_WIDTH, SCREEN_HEIGHT]
         screen = pygame.display.set_mode(size)
-        pygame.display.set_caption("Платформер")
+        pygame.display.set_caption("DuckCapitals")
         player = Player()
         level_list = []
         level_list.append(Level_01(player))
